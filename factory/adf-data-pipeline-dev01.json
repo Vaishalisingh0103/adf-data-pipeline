@@ -1,0 +1,15 @@
+{
+	"name": "adf-data-pipeline-dev01",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "c25efb3c-de60-431e-a058-98d8171645d0",
+		"tenantId": "288f3204-bb27-491e-99fb-8dc86366ca3a"
+	}
+}

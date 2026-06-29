@@ -1,0 +1,56 @@
+{
+	"name": "df_gold_employees",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_employees",
+						"type": "DatasetReference"
+					},
+					"name": "SilverData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_gold_summary",
+						"type": "DatasetReference"
+					},
+					"name": "GoldSummary"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          emp_id as short,",
+				"          emp_name as string,",
+				"          department as string,",
+				"          city as string,",
+				"          salary as integer,",
+				"          join_date as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SilverData",
+				"SilverData aggregate(groupBy(department),",
+				"     emp_count = count(emp_id),",
+				"          { avg_salary } = round(avg(salary), 0)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[' employees_summary.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> GoldSummary"
+			]
+		}
+	}
+}

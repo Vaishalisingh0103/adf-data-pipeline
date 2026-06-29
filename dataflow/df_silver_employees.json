@@ -1,0 +1,67 @@
+{
+	"name": "df_silver_employees",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dss_bronze_employees",
+						"type": "DatasetReference"
+					},
+					"name": "BronzeEmployees"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_employees",
+						"type": "DatasetReference"
+					},
+					"name": "silverEmployees"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CleanTypes"
+				},
+				{
+					"name": "RemoveNulls"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          emp_id as string,",
+				"          emp_name as string,",
+				"          department as string,",
+				"          city as string,",
+				"          salary as integer,",
+				"          join_date as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> BronzeEmployees",
+				"BronzeEmployees derive(salary = toInteger(salary)) ~> CleanTypes",
+				"CleanTypes filter(!isNull(emp_id) && !isNull(emp_name) && !isNull(salary)) ~> RemoveNulls",
+				"RemoveNulls aggregate(groupBy(emp_id),",
+				"     emp_name = first(emp_name),",
+				"          department = first(department),",
+				"          city = first(city),",
+				"          salary = first(salary),",
+				"          join_date = first(join_date)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['employees.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> silverEmployees"
+			]
+		}
+	}
+}
